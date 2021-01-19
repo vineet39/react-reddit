@@ -27,10 +27,13 @@ const main = async () => {
 
   app.use(
     session({
+      name : 'codeil',
       store: new RedisStore({ client: redisClient }),
       secret: "randomstring",
       resave: false,
+      saveUninitialized: true,
       cookie: {
+        maxAge:(1000 * 60 * 100),
         httpOnly: true,
         secure: __prod__,
         sameSite: "lax",

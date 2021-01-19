@@ -6,7 +6,7 @@ import {
   Ctx,
   InputType,
   Mutation,
-  ObjectType,
+  ObjectType, Query
 } from "type-graphql";
 import { MyContext } from "../types";
 import * as argon2 from "argon2";
@@ -37,12 +37,41 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
+  @Query(() => User, { nullable: true})
+  async me(@Ctx() { em, req }: MyContext){
+    if(!req.session.userId){
+      return null;
+    }
+    const userFromDB = await em.findOne(User, { id: req.session.userId });
+    return userFromDB;
+  }
+
   @Mutation(() => UserResponse)
   async register(
     @Arg("options", () => UsernamePasswordInput) options: UsernamePasswordInput,
-    @Ctx() { em }: MyContext
+    @Ctx() { em, req }: MyContext
   ) {
     const userFromDB = await em.findOne(User, { username: options.username });
+    if (options.username.length == 0) {
+      return {
+        errors: [
+          {
+            field: "username",
+            message: "Username is required",
+          },
+        ],
+      };
+    }
+    if (options.password.length == 0) {
+      return {
+        errors: [
+          {
+            field: "password",
+            message: "Password is required",
+          },
+        ],
+      };
+    }
     if (userFromDB != null) {
       return {
         errors: [
@@ -53,7 +82,7 @@ export class UserResolver {
         ],
       };
     }
-    if (options.password.length < 5) {
+    if (options.password.length < 5 && options.password.length > 0) {
       return {
         errors: [
           {
@@ -69,6 +98,8 @@ export class UserResolver {
       password: hashedPassword,
     });
     await em.persistAndFlush(user);
+    req.session.userId = user.id;
+    console.log('Session data', req.session.userId);
     return { user: user };
   }
 
