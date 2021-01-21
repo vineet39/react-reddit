@@ -39,6 +39,7 @@ class UserResponse {
 export class UserResolver {
   @Query(() => User, { nullable: true})
   async me(@Ctx() { em, req }: MyContext){
+    console.log('Session data in me', req.session.userId);
     if(!req.session.userId){
       return null;
     }
@@ -135,7 +136,21 @@ export class UserResolver {
     }
     
     req.session.userId = user.id;
-
+    console.log('Session data', req.session.userId);
     return { user: user };
+  }
+  @Mutation(() => Boolean)
+  logout(@Ctx() { req }: MyContext) {
+    return new Promise((resolve) =>
+      req.session.destroy((err) => {
+        // res.clearCookie(COOKIE_NAME);
+        if (err) {
+          console.log(err);
+          resolve(false);
+          return;
+        }
+        resolve(true);
+      })
+    );
   }
 }

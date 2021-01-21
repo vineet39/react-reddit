@@ -3,8 +3,6 @@
     "version": "0.1.0",
     "scripts": {
         "dev": "next dev",
-        "build": "next build",
-        "start": "next start",
         "gen": "graphql-codegen --config codegen.yml"
     },
     "dependencies": {
@@ -12,6 +10,7 @@
         "@chakra-ui/react": "^1.1.0",
         "@emotion/react": "^11.0.0",
         "@emotion/styled": "^11.0.0",
+        "@urql/exchange-graphcache": "^3.4.0",
         "formik": "^2.2.6",
         "framer-motion": "^2.9.4",
         "graphql": "^15.4.0",

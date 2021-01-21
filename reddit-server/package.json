@@ -11,11 +11,7 @@
         ]
     },
     "scripts": {
-        "start": "node dist/src/ndex.js",
-        "dev": "nodemon dist/src/index.js",
-        "watch": "tsc -w",
-        "start2": "ts-node src/index.ts",
-        "dev2": "nodemon src/index.ts",
+        "dev": "nodemon src/index.ts",
         "create-migration": "mikro-orm migration:create"
     },
     "keywords": [],
