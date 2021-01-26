@@ -7,18 +7,22 @@ import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
 import "reflect-metadata";
 import { PostResolver } from "./resolvers/post";
-import { Post } from "./entities/Post";
+// import { Post } from "./entities/Post";
 import { UserResolver } from "./resolvers/user";
 import redis from "redis";
 import session from "express-session";
 import connectRedis from "connect-redis";
+import { sendEmail } from "./utils/sendEmail";
 // import { MyContext } from "./types";
 
 const main = async () => {
+  sendEmail("vinit.bugtani@gmail.com", "hello")
   const orm = await MikroORM.init(microConfig);
   await orm.getMigrator().up();
-  const post = orm.em.create(Post, { title: "second post" });
-  await orm.em.persistAndFlush(post);
+  // const postOne = orm.em.create(Post, { title: "first post" });
+  // await orm.em.persistAndFlush(postOne);
+  // const postTwo = orm.em.create(Post, { title: "second post" });
+  // await orm.em.persistAndFlush(postTwo);
 
   const app = express();
 
