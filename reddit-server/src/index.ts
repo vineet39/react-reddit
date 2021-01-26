@@ -12,11 +12,11 @@ import { UserResolver } from "./resolvers/user";
 import redis from "redis";
 import session from "express-session";
 import connectRedis from "connect-redis";
-import { sendEmail } from "./utils/sendEmail";
+// import { sendEmail } from "./utils/sendEmail";
 // import { MyContext } from "./types";
 
 const main = async () => {
-  sendEmail("vinit.bugtani@gmail.com", "hello")
+  // sendEmail("vinit.bugtani@gmail.com", "hello").catch(console.error);
   const orm = await MikroORM.init(microConfig);
   await orm.getMigrator().up();
   // const postOne = orm.em.create(Post, { title: "first post" });
