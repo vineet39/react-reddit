@@ -9,11 +9,11 @@ import "reflect-metadata";
 import { PostResolver } from "./resolvers/post";
 // import { Post } from "./entities/Post";
 import { UserResolver } from "./resolvers/user";
-import redis from "redis";
 import session from "express-session";
-import connectRedis from "connect-redis";
+// import connectRedis from "connect-redis";
 // import { sendEmail } from "./utils/sendEmail";
 // import { MyContext } from "./types";
+// import Redis from "ioredis";
 
 const main = async () => {
   // sendEmail("vinit.bugtani@gmail.com", "hello").catch(console.error);
@@ -26,13 +26,13 @@ const main = async () => {
 
   const app = express();
 
-  const RedisStore = connectRedis(session);
-  const redisClient = redis.createClient();
+  // const RedisStore = connectRedis(session);
+  // const redis = new Redis();
 
   app.use(
     session({
       name : 'codeil',
-      store: new RedisStore({ client: redisClient }),
+      // store: new RedisStore({ client: redis }),
       secret: "randomstring",
       resave: false,
       saveUninitialized: true,
