@@ -1,6 +1,6 @@
-import { MikroORM } from "@mikro-orm/core";
+// import { MikroORM } from "@mikro-orm/core";
 import { __prod__ } from "./constants";
-import microConfig from "../mikro-orm.config";
+// import microConfig from "../mikro-orm.config";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
@@ -10,15 +10,30 @@ import { PostResolver } from "./resolvers/post";
 // import { Post } from "./entities/Post";
 import { UserResolver } from "./resolvers/user";
 import session from "express-session";
+import { Post } from "./entities/Post";
+import { User } from "./entities/User";
 // import connectRedis from "connect-redis";
 // import { sendEmail } from "./utils/sendEmail";
 // import { MyContext } from "./types";
 // import Redis from "ioredis";
+import {createConnection} from "typeorm";
+import "reflect-metadata";
 
 const main = async () => {
+  await createConnection({
+    type: "postgres",
+    host: "localhost",
+    port: 3306,
+    username: "admin",
+    password: "admin",
+    database: "new-lireddit",
+    entities: [Post, User],
+    synchronize: true,
+});
   // sendEmail("vinit.bugtani@gmail.com", "hello").catch(console.error);
-  const orm = await MikroORM.init(microConfig);
-  await orm.getMigrator().up();
+  // const orm = await MikroORM.init(microConfig);
+  // await orm.getMigrator().up();
+ 
   // const postOne = orm.em.create(Post, { title: "first post" });
   // await orm.em.persistAndFlush(postOne);
   // const postTwo = orm.em.create(Post, { title: "second post" });
@@ -50,7 +65,7 @@ const main = async () => {
       resolvers: [HelloResolver, PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }) => ({ em: orm.em, req, res }),
+    context: ({ req, res }) => ({ req, res }),
   });
 
   apolloServer.applyMiddleware({ app });
