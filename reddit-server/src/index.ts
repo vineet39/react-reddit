@@ -1,11 +1,11 @@
 // import { MikroORM } from "@mikro-orm/core";
+import "reflect-metadata";
 import { __prod__ } from "./constants";
 // import microConfig from "../mikro-orm.config";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
-import "reflect-metadata";
 import { PostResolver } from "./resolvers/post";
 // import { Post } from "./entities/Post";
 import { UserResolver } from "./resolvers/user";
@@ -17,19 +17,21 @@ import { User } from "./entities/User";
 // import { MyContext } from "./types";
 // import Redis from "ioredis";
 import {createConnection} from "typeorm";
-import "reflect-metadata";
 
 const main = async () => {
-  await createConnection({
+  const conn = await createConnection({
     type: "postgres",
     host: "localhost",
-    port: 3306,
-    username: "admin",
-    password: "admin",
-    database: "new-lireddit",
-    entities: [Post, User],
+    port: 5432,
+    username: "appuser",
+    password: "apppassword",
+    database: "lireddit2",
     synchronize: true,
+    entities: [Post, User],
+    logging: true,
+    
 });
+
   // sendEmail("vinit.bugtani@gmail.com", "hello").catch(console.error);
   // const orm = await MikroORM.init(microConfig);
   // await orm.getMigrator().up();
