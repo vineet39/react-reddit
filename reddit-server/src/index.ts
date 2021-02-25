@@ -1,22 +1,18 @@
-// import { MikroORM } from "@mikro-orm/core";
 import "reflect-metadata";
-import { __prod__ } from "./constants";
-// import microConfig from "../mikro-orm.config";
+import { __prod__, COOKIE_NAME } from "./constants";
 import express from "express";
 import { ApolloServer } from "apollo-server-express";
 import { buildSchema } from "type-graphql";
 import { HelloResolver } from "./resolvers/hello";
 import { PostResolver } from "./resolvers/post";
-// import { Post } from "./entities/Post";
 import { UserResolver } from "./resolvers/user";
 import session from "express-session";
 import { Post } from "./entities/Post";
 import { User } from "./entities/User";
-// import connectRedis from "connect-redis";
-// import { sendEmail } from "./utils/sendEmail";
-// import { MyContext } from "./types";
-// import Redis from "ioredis";
-import {createConnection} from "typeorm";
+import connectRedis from "connect-redis";
+import redis from "redis";
+import { createConnection } from "typeorm";
+import cors from "cors";
 
 const main = async () => {
   const conn = await createConnection({
@@ -29,32 +25,27 @@ const main = async () => {
     synchronize: true,
     entities: [Post, User],
     logging: true,
-    
-});
-
-  // sendEmail("vinit.bugtani@gmail.com", "hello").catch(console.error);
-  // const orm = await MikroORM.init(microConfig);
-  // await orm.getMigrator().up();
- 
-  // const postOne = orm.em.create(Post, { title: "first post" });
-  // await orm.em.persistAndFlush(postOne);
-  // const postTwo = orm.em.create(Post, { title: "second post" });
-  // await orm.em.persistAndFlush(postTwo);
+  });
 
   const app = express();
-
-  // const RedisStore = connectRedis(session);
-  // const redis = new Redis();
+  app.use(cors());
+  const redisClient = redis.createClient();
+  const redisStore = connectRedis(session);
 
   app.use(
     session({
-      name : 'codeil',
-      // store: new RedisStore({ client: redis }),
+      name: COOKIE_NAME,
+      store: new redisStore({
+        host: "localhost",
+        port: 4000,
+        client: redisClient,
+        ttl: 864000,
+      }),
       secret: "randomstring",
       resave: false,
       saveUninitialized: true,
       cookie: {
-        maxAge:(1000 * 60 * 100),
+        maxAge: 1000 * 60 * 100,
         httpOnly: true,
         secure: __prod__,
         sameSite: "lax",
@@ -64,16 +55,17 @@ const main = async () => {
 
   const apolloServer = new ApolloServer({
     schema: await buildSchema({
-      resolvers: [HelloResolver, PostResolver, UserResolver],
+      resolvers: [PostResolver, UserResolver],
       validate: false,
     }),
-    context: ({ req, res }) => ({ req, res }),
+    context: ({ req, res }) => ({ req, res, redis }),
   });
 
-  apolloServer.applyMiddleware({ app });
-  // app.get('/', (_, res) => {
-  //     res.send("hello");
-  // });
+  apolloServer.applyMiddleware({
+    app,
+    // cors: false,
+  });
+
   app.listen(4000);
 };
 main().catch((err) => console.log(err));
