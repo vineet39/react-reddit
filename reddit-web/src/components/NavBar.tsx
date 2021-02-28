@@ -9,7 +9,9 @@ export const NavBar: React.FC<NavBarProps> = ({}) => {
   const [{ data, fetching }] = useMeQuery();
   let body = null;
   if (fetching) {
+    console.log("navbar.tsx line 12")
   } else {
+    console.log("navbar.tsx line 13", data)
     if (!data?.me) {
       body = (
         <>

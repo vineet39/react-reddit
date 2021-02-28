@@ -5,7 +5,8 @@ import {
   Arg,
   Ctx,
   Mutation,
-  ObjectType, Query
+  ObjectType,
+  Query,
 } from "type-graphql";
 import { MyContext } from "../types";
 import * as argon2 from "argon2";
@@ -13,11 +14,8 @@ import { UsernamePasswordInput } from "./UsernamePasswordInput";
 import { validateRegister } from "../utils/validateRegister";
 import { sendEmail } from "../utils/sendEmail";
 import { v4 } from "uuid";
-import { FORGET_PASSWORD_PREFIX } from "../constants";
-import Redis from "ioredis";
-import {getConnection} from "typeorm";
-
-const redis = new Redis();
+import { COOKIE_NAME, FORGET_PASSWORD_PREFIX } from "../constants";
+import { getConnection } from "typeorm";
 
 @ObjectType()
 class FieldError {
@@ -37,10 +35,10 @@ class UserResponse {
 
 @Resolver()
 export class UserResolver {
-  @Query(() => User, { nullable: true})
-  me(@Ctx() { req }: MyContext){
-    console.log('Session data in me', req.session.userId);
-    if(!req.session.userId){
+  @Query(() => User, { nullable: true })
+  me(@Ctx() { req }: MyContext) {
+    console.log("user.ts me query session", req.session.userId);
+    if (!req.session.userId) {
       return null;
     }
     return User.findOne(req.session.userId);
@@ -129,17 +127,17 @@ export class UserResolver {
     }
 
     req.session.userId = user.id;
-
+    console.log("user.ts login query session", req.session);
     return {
       user,
     };
   }
 
   @Mutation(() => Boolean)
-  logout(@Ctx() { req }: MyContext) {
+  logout(@Ctx() { req, res }: MyContext) {
     return new Promise((resolve) =>
       req.session.destroy((err: any) => {
-        // res.clearCookie(COOKIE_NAME);
+        res.clearCookie(COOKIE_NAME);
         if (err) {
           console.log(err);
           resolve(false);
@@ -153,7 +151,7 @@ export class UserResolver {
   @Mutation(() => Boolean)
   async forgotPassword(
     @Arg("email") email: string,
-    // @Ctx() { redis }: MyContext
+    @Ctx() { redis }: MyContext
   ) {
     const user = await User.findOne({ where: { email } });
     if (!user) {
@@ -182,7 +180,7 @@ export class UserResolver {
   async changePassword(
     @Arg("token") token: string,
     @Arg("newPassword") newPassword: string,
-    @Ctx() { req }: MyContext
+    @Ctx() { redis, req }: MyContext
   ): Promise<UserResponse> {
     if (newPassword.length <= 2) {
       return {
@@ -222,16 +220,14 @@ export class UserResolver {
       };
     }
 
-      await User.update(
-        { id: userIdNum },
-        {
-          password: await argon2.hash(newPassword),
-        }
-      );
+    await User.update(
+      { id: userIdNum },
+      {
+        password: await argon2.hash(newPassword),
+      }
+    );
 
-      // user.password = await argon2.hash(newPassword);
-      // await em.persistAndFlush(user);
-    // await redis.del(key);
+    await redis.del(key);
 
     // log in user after change password
     req.session.userId = user.id;

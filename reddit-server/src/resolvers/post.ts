@@ -7,10 +7,13 @@ import {
   InputType,
   Field,
   Ctx,
-  UseMiddleware,
+  Int,
+  FieldResolver,
+  Root, ObjectType
 } from "type-graphql";
 import { MyContext } from "../types";
 import { isAuth } from "../middleware/isAuth";
+import { getConnection } from "typeorm";
 
 @InputType()
 export class PostInput {
@@ -20,11 +23,38 @@ export class PostInput {
   text: string;
 }
 
-@Resolver()
+@ObjectType()
+class PaginatedPosts {
+  @Field(() => [Post])
+  posts: Post[];
+  @Field()
+  hasMore: boolean;
+}
+
+@Resolver(Post)
 export class PostResolver {
-  @Query(() => [Post])
-  getAllPosts() {
-    return Post.find();
+  @Query(() => PaginatedPosts)
+  async getAllPosts(
+    @Arg("limit", () => Int) limit: number,
+    @Arg("cursor", () => String, { nullable: true }) cursor: string | null
+  ): Promise<PaginatedPosts> {
+    console.log(limit);
+    console.log(cursor);
+    const realLimit = Math.min(50, limit);
+    const realLimitPlusOne = realLimit + 1;
+    const qb = getConnection()
+      .getRepository(Post)
+      .createQueryBuilder("p")
+      .orderBy('"createdAt"', "DESC")
+      .take(realLimitPlusOne);
+    if (cursor) {
+      qb.where('"createdAt" < :cursor', { cursor: new Date(parseInt(cursor)) });
+    }
+
+    const posts = await qb.getMany();
+    console.log('posts.length ',posts.length)
+    console.log('realLimitPlusOne ',realLimitPlusOne)
+    return { posts: posts.slice(0, realLimit), hasMore: posts.length === realLimitPlusOne }
   }
   @Query(() => Post, { nullable: true })
   getPostsByID(@Arg("id") id: number): Promise<Post | undefined> {
@@ -43,7 +73,7 @@ export class PostResolver {
     // }
     return Post.create({
       ...input,
-      // creatorId: 3,
+      creatorId: 1,
     }).save();
   }
   @Mutation(() => Post, { nullable: true })
@@ -65,5 +95,9 @@ export class PostResolver {
   async deletePost(@Arg("id") id: number): Promise<boolean> {
     await Post.delete(id);
     return true;
+  }
+  @FieldResolver(() => String)
+  textSnippet(@Root() root: Post) {
+    return root.text.slice(0, 50);
   }
 }

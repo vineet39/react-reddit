@@ -32,7 +32,7 @@ const ForgotPassword: React.FC<{}> = ({}) => {
               mt={4}
               type="submit"
               isLoading={isSubmitting}
-              variantColor="teal"
+              variantcolor="teal"
             >
               forgot password
             </Button>
